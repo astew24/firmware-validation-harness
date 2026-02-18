@@ -1,0 +1,6 @@
+build*/
+build/
+.run/
+latest_results.csv
+*.log
+.DS_Store
