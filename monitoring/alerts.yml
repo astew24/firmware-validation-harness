@@ -1,0 +1,32 @@
+groups:
+  - name: firmware-validation
+    rules:
+      - alert: ValidationScenarioFailing
+        expr: fvh_scenario_passed == 0
+        labels:
+          severity: page
+        annotations:
+          summary: "Scenario {{ $labels.scenario }} is failing validation"
+
+      - alert: FaultDetectionTooSlow
+        expr: fvh_fault_detection_latency_ms > 30
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.scenario }}: fault detection took {{ $value }} ms (limit 30 ms)"
+
+      - alert: TelemetryCorruptionHigh
+        expr: sum(rate(fvh_frames_rejected_total[1m])) / sum(rate(fvh_packets_accepted_total[1m])) > 0.1
+        for: 1m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "More than 10% of telemetry frames are being rejected"
+
+      - alert: HarnessStalled
+        expr: time() - fvh_last_cycle_timestamp_seconds > 60
+        for: 1m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "No validation cycle has finished in over a minute"

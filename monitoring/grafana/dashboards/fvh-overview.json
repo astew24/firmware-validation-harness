@@ -1,0 +1,124 @@
+{
+  "uid": "fvh-overview",
+  "title": "Firmware Validation Harness",
+  "tags": ["firmware", "validation"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Scenarios passing (last cycle)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "sum(fvh_scenario_passed)", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 6 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Slowed firmware build running",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "fvh_bad_build", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [ { "type": "value", "options": { "0": { "text": "no" }, "1": { "text": "YES" } } } ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Validation cycles run",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "fvh_cycles_total", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Corrupted packets caught by CRC",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "sum(fvh_packets_corrupted_total)", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Fault detection latency (ms), limit 30",
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "fvh_fault_detection_latency_ms", "legendFormat": "{{scenario}}", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "thresholdsStyle": { "mode": "line" } },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 30 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Failed checks per minute, by scenario",
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (scenario) (increase(fvh_check_failures_total[1m]))", "legendFormat": "{{scenario}}", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "custom": { "lineWidth": 2, "fillOpacity": 15 } }, "overrides": [] }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Telemetry packets per second",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(fvh_packets_accepted_total[1m]))", "legendFormat": "accepted", "datasource": { "type": "prometheus", "uid": "fvh-prom" } },
+        { "refId": "B", "expr": "sum(rate(fvh_packets_corrupted_total[1m]))", "legendFormat": "corrupted (rejected by CRC)", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "pps", "custom": { "lineWidth": 2 } }, "overrides": [] }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Max tracking error vs true signal",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "fvh-prom" },
+      "targets": [
+        { "refId": "A", "expr": "fvh_tracking_error_max", "legendFormat": "{{scenario}}", "datasource": { "type": "prometheus", "uid": "fvh-prom" } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "custom": { "lineWidth": 2 } }, "overrides": [] }
+    }
+  ]
+}
