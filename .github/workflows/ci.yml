@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [release, sanitizers]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: configure
+        run: |
+          if [ "${{ matrix.build }}" = "sanitizers" ]; then
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DFVH_SANITIZE=ON
+          else
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          fi
+
+      - name: build
+        run: cmake --build build -j
+
+      - name: unit tests + regression gate
+        run: ctest --test-dir build --output-on-failure
+
+      - name: slowed firmware build must be caught
+        run: |
+          if ./build/fvh --fw-timeout-ms 60 --baseline baseline/baseline.csv --results build/bad.csv; then
+            echo "expected the regression gate to fail on a slowed build" && exit 1
+          fi
+
+  monitoring-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool check
+        run: |
+          docker run --rm -v "$PWD/monitoring:/m" --entrypoint promtool prom/prometheus:v2.53.0 check config /m/prometheus.yml
