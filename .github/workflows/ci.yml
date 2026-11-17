@@ -27,6 +27,14 @@ jobs:
       - name: unit tests + regression gate
         run: ctest --test-dir build --output-on-failure
 
+      - name: upload validation results
+        if: always() && matrix.build == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-results
+          path: build/latest_results.csv
+          if-no-files-found: ignore
+
       - name: slowed firmware build must be caught
         run: |
           if ./build/fvh --fw-timeout-ms 60 --baseline baseline/baseline.csv --results build/bad.csv; then
